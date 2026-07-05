@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eckity-bert-gp"
+version = "0.1.0"
+description = "BERT mutation operator for EC-KitY genetic programming"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+authors = [{ name = "EC-KitY" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "eckity~=0.4.1",
+    "numpy>=2.0.2",
+    "overrides>=7.7.0",
+    "scikit-learn>=1.5.0",
+    "scipy>=1.13.0",
+    "torch>=2.7.1",
+    "transformers>=4.50.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "build>=1.2",
+    "pandas>=2.2",
+    "pytest>=8.0",
+    "twine>=5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/EC-KitY/BERT-Mutation-for-GP"
+Repository = "https://github.com/EC-KitY/BERT-Mutation-for-GP"
+Paper = "https://doi.org/10.3390/math13050779"
+
+[tool.setuptools]
+packages = ["eckity_bert_gp"]
+py-modules = ["bert_mutation", "uniform_mutation", "aux_func"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
