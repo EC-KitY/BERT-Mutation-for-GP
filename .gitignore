@@ -312,3 +312,10 @@ cython_debug/
 !.vscode/*.code-snippets
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,intellij+all,pycharm+all
+
+# Project build and environment artifacts
+.uv-cache/
+.venv/
+build/
+dist/
+*.egg-info/
