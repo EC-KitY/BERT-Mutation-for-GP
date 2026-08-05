@@ -174,15 +174,7 @@ def main():
                 bert_mutation_op,
                 # UniformNodeMutation(node_probability=0.1),
             ],
-            selection_methods=[
-                # (selection method, selection probability) tuple
-                (
-                    TournamentSelection(
-                        tournament_size=4
-                    ),
-                    1,
-                )
-            ],
+            selection_methods=[TournamentSelection(tournament_size=4)],
         ),
         max_workers=4,
         max_generation=40,
