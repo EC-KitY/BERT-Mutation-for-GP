@@ -15,7 +15,7 @@ def test_release_metadata_and_public_imports():
     from eckity_bert_gp import BertGPEckity, BertMutation
 
     assert version("eckity") == "0.4.2"
-    assert version("eckity-bert-gp") == "0.1.1"
+    assert version("eckity-bert-gp") == "0.1.2"
     assert BertMutation is not None
     assert BertGPEckity is not None
     assert eckity_bert_gp.__all__ == ["BertMutation", "BertGPEckity"]

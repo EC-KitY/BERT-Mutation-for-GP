@@ -85,7 +85,7 @@ def program_to_labels(program: Tree, mask_indexes) -> List[str]:
         elif type(node) is FunctionNode:
             labels.append(node.function.__name__)
         elif type(node) is TerminalNode:
-            if type(node.value) is str:
+            if isinstance(node.value, str):
                 labels.append(node.value)
             else:
                 labels.append('const')

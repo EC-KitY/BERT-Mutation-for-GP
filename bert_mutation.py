@@ -223,7 +223,10 @@ class BertMutation:
             sampled_actions_probability = torch.gather(operators_proba, dim=1,
                                                        index=sampled_operators_dist.unsqueeze(-1))
             trajectory_action_probabilities.append(sampled_actions_probability)
-            suggested_mutation += [current_allowed_operators[sampled_operators_dist.detach().cpu().numpy()][0]]
+            sampled_operator = current_allowed_operators[
+                sampled_operators_dist.detach().cpu().numpy()
+            ][0]
+            suggested_mutation.append(str(sampled_operator))
 
             if self.full_trajectory_query:
                 tokens_ids = torch.clone(tokens_ids)
