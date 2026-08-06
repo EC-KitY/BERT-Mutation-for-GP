@@ -63,7 +63,7 @@ The model is initialized locally from `BertConfig`; installing or constructing t
 
 ## Compatibility
 
-- Python 3.9 or newer
+- Python 3.10 or newer
 - EC-KitY 0.4.x
 - NumPy 2.0.2 or newer
 - SciPy 1.13.0 or newer
