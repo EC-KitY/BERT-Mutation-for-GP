@@ -11,7 +11,7 @@ from eckity.genetic_operators.selections.tournament_selection import (
 )
 from eckity.subpopulation import Subpopulation
 
-from eckity_bert_gp import BERTUniformMutation, BertMutation
+from eckity_bert_gp import BertGPEckity, BertMutation
 
 
 class TinySymbolicRegressionEvaluator(SimpleIndividualEvaluator):
@@ -45,9 +45,11 @@ def test_tiny_symbolic_regression_evolves_and_trains_bert(monkeypatch):
         internal_size=4,
         full_trajectory_query=False,
         function_mappings={function.__name__: function for function in functions},
-        higher_is_better=False,
     )
-    mutation = BERTUniformMutation(
+    assert bert_model.vocab_size == len(bert_model.token_to_id)
+    assert bert_model.mask_id == bert_model.token_to_id["<mask>"]
+    assert not hasattr(bert_model, "token_encoder")
+    mutation = BertGPEckity(
         bert_model=bert_model,
         probability=1.0,
         node_probability=1.0,

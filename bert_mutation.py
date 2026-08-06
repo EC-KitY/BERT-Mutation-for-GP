@@ -3,7 +3,6 @@ import random
 import numpy as np
 import torch
 from eckity.genetic_encodings.gp import TerminalNode, FunctionNode
-from sklearn.preprocessing import LabelEncoder
 from transformers import BertConfig
 from transformers import BertForMaskedLM
 from torch.optim import Adam
@@ -40,15 +39,32 @@ class BertMutation:
                  adam_decay=0,
                  epsilon_greedy=0.01, word_embedding_dim=120, context_size=2048, n_layers=3, n_attention_heads=3,
                  internal_size=128, clip_grad_norm=1.0, full_trajectory_query=True, diff_reward=True,
-                 function_mappings=None, terminals_mappings=None, higher_is_better=True, allow_constant_terminals=True):
+                 function_mappings=None, terminals_mappings=None, allow_constant_terminals=True):
 
         if constant_names is None:
             constant_names = []
 
-        # functions + constants + [<mask>] + [const]
-        self.vocab_size = len(operators_list) + len(constant_names) + 2
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f'Using device: {self.device}')
+
+        if allow_constant_terminals:
+            self.terminals = np.array(constant_names + ['const'])
+        else:
+            self.terminals = np.array(constant_names)
+
+        vocabulary = list(operators_list) + ['<mask>'] + list(self.terminals)
+        if not all(isinstance(token, str) for token in vocabulary):
+            raise TypeError("BERT mutation tokens must be strings")
+        if len(vocabulary) != len(set(vocabulary)):
+            raise ValueError("BERT mutation tokens must be unique")
+
+        # Keep token IDs deterministic without an external encoder.
+        self.vocabulary = tuple(sorted(vocabulary))
+        self.token_to_id = {
+            token: token_id for token_id, token in enumerate(self.vocabulary)
+        }
+        self.vocab_size = len(self.vocabulary)
+        self.mask_id = self.token_to_id['<mask>']
         self.bert_config = {
             'vocab_size': self.vocab_size,
             'hidden_size': word_embedding_dim,
@@ -62,15 +78,6 @@ class BertMutation:
         self.action_probabilities = []
         self.rewards = []
         self.batch_size = batch_size
-
-        if allow_constant_terminals:
-            self.terminals = np.array(constant_names + ['const'])
-        else:
-            self.terminals = np.array(constant_names)
-
-        self.token_encoder = LabelEncoder().fit(
-            list(operators_list) + ['<mask>'] + list(self.terminals))
-        self.mask_id = self.token_encoder.transform(['<mask>'])[0]
         self.trajectory_probabilities = []
         self.n_features = len(constant_names)
         self.rewards = []
@@ -88,8 +95,6 @@ class BertMutation:
                 self.terminals_mappings['const'] = self.n_features
         else:
             self.terminals_mappings = terminals_mappings
-
-        self.higher_is_better = higher_is_better
 
     def mutate(self, program_tokens, allowed_operators, tree_program, masked_nodes,
                arity_ndarray=None, allowed_operators_arity=None, terminal_traj=False):
@@ -115,7 +120,11 @@ class BertMutation:
             arity_ndarray, masked_nodes, program_tokens, unmasked_tokens)
 
         initial_fitness = self.get_fitness_func(tree_program)
-        tokens_ids = torch.Tensor([self.token_encoder.transform(mapped_tokens)]).type(torch.LongTensor).to(self.device)
+        tokens_ids = torch.tensor(
+            [[self.token_to_id[token] for token in mapped_tokens]],
+            dtype=torch.long,
+            device=self.device,
+        )
         logits = self.model(tokens_ids, attention_mask=torch.ones_like(tokens_ids).to(self.device)).logits
         mask_indices = torch.where(tokens_ids == self.mask_id)[1]
 
@@ -153,19 +162,21 @@ class BertMutation:
 
         new_fitness = self.get_fitness_func(tree_program)
 
-        if self.diff_reward:
-            reward = (new_fitness - initial_fitness)
-        else:
-            reward = new_fitness
-
-        if self.higher_is_better:
-            reward *= -1
+        reward = self._policy_reward(initial_fitness, new_fitness, tree_program)
 
         trajectory_probability = torch.log(torch.cat(trajectory_action_probabilities)).sum().unsqueeze(
             0).unsqueeze(0)
         self.rewards.append(torch.full_like(trajectory_probability, reward))
         self.trajectory_probabilities.append(trajectory_probability)
         self.run_epoch()
+
+    def _policy_reward(self, initial_fitness, new_fitness, tree_program):
+        reward = (
+            new_fitness - initial_fitness
+            if self.diff_reward
+            else new_fitness
+        )
+        return -reward if tree_program.higher_is_better else reward
 
     def masked_trajectory_generation(self, allowed_operators, logits, mask_indices, arity_of_masked_locations,
                                      allowed_operators_arity, tokens_ids):
@@ -183,7 +194,10 @@ class BertMutation:
                                                                                       arity_of_masked_locations,
                                                                                       mask_indices)
 
-        masked_softmax_indexes = torch.Tensor(self.token_encoder.transform(allowed_operators)).type(torch.LongTensor)
+        masked_softmax_indexes = torch.tensor(
+            [self.token_to_id[token] for token in allowed_operators],
+            dtype=torch.long,
+        )
         suggested_mutation = []
         trajectory_action_probabilities = []
 

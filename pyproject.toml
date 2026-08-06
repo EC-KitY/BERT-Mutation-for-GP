@@ -24,7 +24,7 @@ dependencies = [
     "eckity~=0.4.2",
     "numpy>=2.0.2",
     "overrides>=7.7.0",
-    "scikit-learn>=1.5.0",
+    # Required by EC-KitY 0.4.2's fitness-proportionate selection import.
     "scipy>=1.13.0",
     "torch>=2.7.1",
     "transformers>=4.50.0",

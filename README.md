@@ -13,10 +13,10 @@ pip install eckity-bert-gp
 ## Public API
 
 ```python
-from eckity_bert_gp import BertMutation, BERTUniformMutation
+from eckity_bert_gp import BertGPEckity, BertMutation
 ```
 
-`BertMutation` owns and trains the BERT policy. `BERTUniformMutation` adapts that policy to EC-KitY's genetic-operator interface.
+`BertMutation` owns and trains the BERT policy. `BertGPEckity` adapts that policy to EC-KitY's genetic-programming operator interface.
 
 ## Usage
 
@@ -25,7 +25,7 @@ The BERT model needs the function names, terminal names, fitness callback, and m
 ```python
 import numpy as np
 from eckity.base.untyped_functions import f_add, f_div, f_mul, f_sub
-from eckity_bert_gp import BertMutation, BERTUniformMutation
+from eckity_bert_gp import BertGPEckity, BertMutation
 
 function_set = [f_add, f_sub, f_mul, f_div]
 terminal_set = ["x", "y", "z"]
@@ -40,10 +40,9 @@ bert_model = BertMutation(
     n_layers=1,
     n_attention_heads=1,
     function_mappings=function_mappings,
-    higher_is_better=False,
 )
 
-bert_mutation = BERTUniformMutation(
+bert_mutation = BertGPEckity(
     bert_model=bert_model,
     probability=1.0,
     node_probability=0.1,
@@ -53,6 +52,7 @@ bert_mutation = BERTUniformMutation(
 Add `bert_mutation` to the EC-KitY subpopulation's `operators_sequence`.
 
 - `get_fitness_func` accepts an EC-KitY GP tree and returns its fitness.
+- Fitness direction is read automatically from the EC-KitY tree individual.
 - `function_mappings` maps each function name used by BERT back to the callable stored in GP trees.
 - Terminal mappings default to the names supplied in `constant_names`.
 - `probability` controls whether the EC-KitY mutation operator runs.
@@ -69,7 +69,6 @@ The model is initialized locally from `BertConfig`; installing or constructing t
 - SciPy 1.13.0 or newer
 - PyTorch 2.7.1 or newer
 - Transformers 4.50.0 or newer
-- scikit-learn 1.5.0 or newer
 
 These bounds are compatible with `eckity-dnc` and `eckity-bert-ga`; none of the three packages directly depends on another operator package.
 

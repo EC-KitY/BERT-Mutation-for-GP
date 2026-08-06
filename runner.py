@@ -29,7 +29,7 @@ from eckity.termination_checkers.threshold_from_target_termination_checker impor
 )
 
 from bert_mutation import BertMutation
-from uniform_mutation import UniformNodeMutation, BERTUniformMutation
+from uniform_mutation import UniformNodeMutation, BertGPEckity
 
 
 class SymbolicRegressionEvaluator(SimpleIndividualEvaluator):
@@ -144,7 +144,7 @@ def main():
         function_mappings=function_mapping,
 
     )
-    bert_mutation_op = BERTUniformMutation(
+    bert_mutation_op = BertGPEckity(
         bert_model=bert_model,
         probability=1.0,
         node_probability=0.5,

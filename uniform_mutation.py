@@ -71,7 +71,7 @@ class UniformNodeMutation(FailableOperator):
             raise ValueError(f"Node type {type(node)} not supported")
 
 
-class BERTUniformMutation(FailableOperator):
+class BertGPEckity(FailableOperator):
     def __init__(
             self,
             bert_model: BertMutation,
